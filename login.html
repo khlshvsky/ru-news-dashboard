@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Вход — Лента независимых СМИ</title>
+  <style>
+    :root {
+      --bg: #faf7f7;
+      --panel: #ffffff;
+      --text: #1a1114;
+      --muted: #7a6b6e;
+      --border: #e7d8dc;
+      --accent: #722f37;
+      --accent-dark: #55232a;
+      --accent-ring: rgba(114, 47, 55, 0.28);
+      --danger: #b42318;
+      --shadow: 0 18px 45px rgba(45, 17, 22, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, #f4e3e6 0, transparent 38%), var(--bg);
+    }
+
+    .card {
+      width: min(400px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 36px 32px 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 26px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    label > span {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+
+    button {
+      width: 100%;
+      height: 46px;
+      margin-top: 8px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover:not(:disabled) { background: var(--accent-dark); }
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .error {
+      margin: 16px 0 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fdeceb;
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .error[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">Независимые СМИ</p>
+    <h1>Вход</h1>
+    <p class="subtitle">Лента доступна только по логину и паролю.</p>
+
+    <form id="loginForm" autocomplete="on">
+      <label>
+        <span>Логин</span>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus />
+      </label>
+
+      <label>
+        <span>Пароль</span>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+      </label>
+
+      <button id="submitBtn" type="submit">Войти</button>
+    </form>
+
+    <p id="errorBox" class="error" role="alert" hidden></p>
+  </main>
+
+  <script>
+    const form = document.querySelector('#loginForm');
+    const submitBtn = document.querySelector('#submitBtn');
+    const errorBox = document.querySelector('#errorBox');
+
+    // Куда вернуть после входа. Берём только относительный путь: если принять
+    // произвольный URL, страница превратится в открытый редиректор.
+    function safeNext() {
+      const raw = new URLSearchParams(location.search).get('next');
+      if (!raw) return '/';
+      if (!raw.startsWith('/') || raw.startsWith('//')) return '/';
+      return raw;
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorBox.hidden = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Проверяю…';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.querySelector('#username').value,
+            password: document.querySelector('#password').value
+          })
+        });
+
+        if (res.ok) {
+          location.href = safeNext();
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 429) {
+          showError(`Слишком много попыток. Попробуйте через ${Math.ceil((data.retryAfter || 900) / 60)} мин.`);
+        } else if (res.status === 503) {
+          showError('Аутентификация не настроена на сервере. Проверьте переменные окружения.');
+        } else {
+          showError('Неверный логин или пароль.');
+        }
+      } catch {
+        showError('Не удалось связаться с сервером. Проверьте соединение.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Войти';
+        document.querySelector('#password').value = '';
+      }
+    });
+  </script>
+</body>
+</html>
