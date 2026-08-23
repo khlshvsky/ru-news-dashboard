@@ -1,4 +1,5 @@
 :root {
+  --font-heading: "Oranienbaum", Georgia, "Times New Roman", serif;
   --bg: #faf7f7;
   --panel: #ffffff;
   --panel-soft: #f7edef;
@@ -57,6 +58,13 @@ h1,
 h2,
 p {
   margin-top: 0;
+}
+
+h1,
+h2,
+.headline {
+  font-family: var(--font-heading);
+  font-weight: 400;
 }
 
 h1 {
@@ -591,5 +599,4 @@ button:focus-visible,
 }
 
 .current-user:empty { display: none; }
-
 
