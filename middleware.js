@@ -22,7 +22,7 @@ const STRICT_SESSION = process.env.AUTH_STRICT_SESSION === 'true';
 export const config = {
   matcher: [
     // Всё, кроме внутренних путей Vercel, страницы логина и её ассетов.
-    '/((?!_next|_vercel|favicon\\.ico|login\\.html|login\\.css|api/login|api/logout).*)'
+    '/((?!_next|_vercel|favicon\\.ico|login\\.html|setup\\.html|api/login|api/logout|api/setup).*)'
   ]
 };
 
@@ -33,14 +33,10 @@ function url0(request) {
 export default async function middleware(request) {
   const { secret, configured, missing } = getAuthConfig();
 
-  // Без настроенных переменных не пускаем никого. Открытый дашборд «пока
-  // не настроил» — это ровно та ситуация, ради которой всё и затевалось.
+  // Пока не настроено — не пускаем никого, но вместо голого текста уводим
+  // на страницу настройки: она сама покажет, чего не хватает.
   if (!configured) {
-    return new Response(
-      `Аутентификация не настроена.\n\nНе хватает: ${missing.join('; ')}\n\n` +
-      `Завести пользователя: node tools/manage-users.mjs add <логин>\n`,
-      { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
-    );
+    return Response.redirect(new URL('/setup.html', request.url), 302);
   }
 
   const token = readCookie(request.headers.get('cookie'), COOKIE_NAME);

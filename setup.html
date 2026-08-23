@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Настройка — Лента независимых СМИ</title>
+  <style>
+    :root {
+      --bg: #faf7f7; --panel: #fff; --text: #1a1114; --muted: #7a6b6e;
+      --border: #e7d8dc; --accent: #722f37; --accent-dark: #55232a;
+      --accent-soft: #f3e4e7; --accent-ring: rgba(114,47,55,0.28);
+      --danger: #b42318; --ok: #0e7a3d;
+      --shadow: 0 18px 45px rgba(45,17,22,0.09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 40px 20px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, #f4e3e6 0, transparent 38%), var(--bg);
+    }
+    .wrap { width: min(620px, 100%); margin: 0 auto; }
+    .eyebrow {
+      margin: 0 0 8px; font-size: 12px; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--accent); font-weight: 700;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: -.03em; }
+    .lead { margin: 0 0 28px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 18px; overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 800;
+    }
+    .num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-size: 12px; flex-shrink: 0;
+    }
+    .card.done .num { background: var(--ok); }
+    .card-body { padding: 20px; }
+    .card-body p { margin: 0 0 12px; font-size: 13px; line-height: 1.65; color: var(--muted); }
+    .card-body p:last-child { margin-bottom: 0; }
+
+    .kv {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+      padding: 10px 12px; background: var(--accent-soft); border-radius: 9px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; word-break: break-all;
+    }
+    .kv code { flex: 1; }
+    .copy {
+      flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--accent);
+      border-radius: 6px; background: #fff; color: var(--accent);
+      font: inherit; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .copy:hover { background: var(--accent); color: #fff; }
+
+    label { display: block; margin-bottom: 14px; }
+    label > span {
+      display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+    }
+    input {
+      width: 100%; height: 42px; padding: 0 12px; font: inherit; font-size: 14px;
+      color: var(--text); background: #fff; border: 1px solid var(--border); border-radius: 9px;
+    }
+    input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+
+    .btn {
+      height: 44px; padding: 0 20px; border: 0; border-radius: 9px;
+      background: var(--accent); color: #fff; font: inherit; font-size: 14px;
+      font-weight: 800; cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: var(--accent-dark); }
+    .btn:disabled { opacity: .55; cursor: default; }
+    .btn-wide { width: 100%; }
+
+    .status { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+    .status:last-child { margin-bottom: 0; }
+    .status .mark { flex-shrink: 0; font-weight: 800; }
+    .status.yes .mark { color: var(--ok); }
+    .status.no .mark { color: var(--danger); }
+
+    .msg { margin: 0 0 16px; padding: 11px 14px; border-radius: 9px; font-size: 13px; line-height: 1.55; }
+    .msg-err { background: #fdeceb; color: var(--danger); }
+    .msg-ok { background: #e8f5ed; color: var(--ok); }
+    .msg[hidden] { display: none; }
+    .hint { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="eyebrow">Первичная настройка</p>
+    <h1>Создание администратора</h1>
+    <p class="lead">
+      Страница работает один раз — пока в базе нет ни одного пользователя.
+      После создания первого администратора она закрывается навсегда.
+    </p>
+
+    <p id="msg" class="msg" hidden></p>
+
+    <section class="card" id="card1">
+      <div class="card-head"><span class="num">1</span> Переменные окружения</div>
+      <div class="card-body">
+        <p>
+          Скопируй обе строки и добавь их в Vercel → Settings → Environment Variables,
+          отметив Production, Preview и Development. Значения сгенерированы прямо
+          в твоём браузере и никуда не отправлялись.
+        </p>
+        <div class="kv"><code id="secretVal"></code><button class="copy" data-target="secretVal">Копировать</button></div>
+        <div class="kv"><code id="tokenVal"></code><button class="copy" data-target="tokenVal">Копировать</button></div>
+        <p>
+          Затем сделай <b>Redeploy</b> — без него новые переменные не подхватятся.
+          Вернись сюда и обнови страницу.
+        </p>
+      </div>
+    </section>
+
+    <section class="card" id="card2">
+      <div class="card-head"><span class="num">2</span> Проверка</div>
+      <div class="card-body" id="statusBody">
+        <p>Проверяю…</p>
+      </div>
+    </section>
+
+    <section class="card" id="card3">
+      <div class="card-head"><span class="num">3</span> Администратор</div>
+      <div class="card-body">
+        <label>
+          <span>Код настройки (AUTH_SETUP_TOKEN)</span>
+          <input id="setupToken" type="text" autocomplete="off" placeholder="вставь значение из шага 1" />
+        </label>
+        <label>
+          <span>Логин</span>
+          <input id="username" type="text" autocomplete="off" placeholder="латиницей, например anna" />
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input id="password" type="text" autocomplete="new-password" placeholder="минимум 12 символов" />
+        </label>
+        <button class="btn btn-wide" id="createBtn" type="button" disabled>Создать администратора</button>
+        <p class="hint" style="margin-top:12px;">
+          Запиши пароль сейчас — восстановить его будет нельзя, в базе хранится только хеш.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const msg = $('msg');
+
+    function notify(text, kind) {
+      msg.textContent = text;
+      msg.className = `msg msg-${kind}`;
+      msg.hidden = false;
+    }
+
+    // Значения генерируются локально, в чат и на сервер не попадают.
+    function randomBase64Url(bytes) {
+      const raw = crypto.getRandomValues(new Uint8Array(bytes));
+      let bin = '';
+      for (const b of raw) bin += String.fromCharCode(b);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    // Показываем один и тот же комплект между перезагрузками, иначе человек
+    // вставит в Vercel одно, а в форму — уже другое.
+    function stable(key, bytes) {
+      let value = sessionStorage.getItem(key);
+      if (!value) {
+        value = randomBase64Url(bytes);
+        sessionStorage.setItem(key, value);
+      }
+      return value;
+    }
+
+    const secret = stable('setup_secret', 32);
+    const token = stable('setup_token', 18);
+    $('secretVal').textContent = `AUTH_SECRET=${secret}`;
+    $('tokenVal').textContent = `AUTH_SETUP_TOKEN=${token}`;
+
+    document.querySelectorAll('.copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const text = $(btn.dataset.target).textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Скопировано';
+          setTimeout(() => { btn.textContent = 'Копировать'; }, 1500);
+        } catch {
+          notify('Браузер не дал доступ к буферу — выдели строку и скопируй вручную.', 'err');
+        }
+      });
+    });
+
+    function line(ok, text) {
+      return `<div class="status ${ok ? 'yes' : 'no'}"><span class="mark">${ok ? '✓' : '✗'}</span><span>${text}</span></div>`;
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch('/api/setup');
+        const s = await res.json();
+
+        const parts = [
+          line(s.storeKind === 'redis', s.storeKind === 'redis'
+            ? 'Redis подключён'
+            : 'Redis не подключён — добавь KV_REST_API_URL и KV_REST_API_TOKEN'),
+          line(s.hasSecret, s.hasSecret ? 'AUTH_SECRET задан' : 'AUTH_SECRET не задан'),
+          line(s.hasSetupToken, s.hasSetupToken ? 'AUTH_SETUP_TOKEN задан' : 'AUTH_SETUP_TOKEN не задан')
+        ];
+
+        if (s.storeError) parts.push(line(false, `Ошибка базы: ${s.storeError}`));
+        if (s.userCount !== null) parts.push(line(s.userCount === 0, `Пользователей в базе: ${s.userCount}`));
+
+        $('statusBody').innerHTML = parts.join('');
+        $('card2').classList.toggle('done', s.ready || s.done);
+        $('card1').classList.toggle('done', s.hasSecret && s.hasSetupToken);
+        $('createBtn').disabled = !s.ready;
+
+        if (s.done) {
+          notify('Настройка уже завершена. Открой /login.html и входи под своим логином.', 'ok');
+          $('createBtn').disabled = true;
+        } else if (!s.ready) {
+          notify('Добавь недостающие переменные в Vercel, сделай Redeploy и обнови эту страницу.', 'err');
+        } else {
+          msg.hidden = true;
+        }
+      } catch (error) {
+        $('statusBody').innerHTML = line(false, 'Не удалось получить статус: ' + error.message);
+      }
+    }
+
+    $('createBtn').addEventListener('click', async () => {
+      const btn = $('createBtn');
+      btn.disabled = true;
+      btn.textContent = 'Создаю…';
+      try {
+        const res = await fetch('/api/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            setupToken: $('setupToken').value.trim(),
+            username: $('username').value.trim(),
+            password: $('password').value
+          })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          notify(`Администратор «${data.username}» создан. Переходим ко входу…`, 'ok');
+          setTimeout(() => { location.href = '/login.html'; }, 1800);
+          return;
+        }
+        notify(data.message || `Ошибка ${res.status}`, 'err');
+      } catch (error) {
+        notify('Не удалось связаться с сервером: ' + error.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Создать администратора';
+      }
+    });
+
+    refresh();
+  </script>
+</body>
+</html>
