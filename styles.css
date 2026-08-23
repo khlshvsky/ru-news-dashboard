@@ -1,5 +1,5 @@
 :root {
-  --font-heading: "Oranienbaum", Georgia, "Times New Roman", serif;
+  --font-heading: "Source Serif 4", Georgia, "Times New Roman", serif;
   --bg: #faf7f7;
   --panel: #ffffff;
   --panel-soft: #f7edef;
@@ -69,9 +69,9 @@ h2,
 
 h1 {
   margin-bottom: 8px;
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: clamp(36px, 5vw, 58px);
   line-height: 1;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
@@ -351,7 +351,7 @@ button:focus-visible,
 
 .feed-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 21px;
   letter-spacing: -0.02em;
 }
 
@@ -399,10 +399,10 @@ button:focus-visible,
   display: inline-block;
   color: var(--text);
   text-decoration: none;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.35;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
   border-radius: 8px;
 }
 
@@ -464,7 +464,7 @@ button:focus-visible,
   }
 
   .headline {
-    font-size: 16px;
+    font-size: 18px;
   }
 }
 
@@ -599,4 +599,3 @@ button:focus-visible,
 }
 
 .current-user:empty { display: none; }
-
