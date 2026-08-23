@@ -8,7 +8,16 @@
 //  Открыты без сессии только страница логина и её эндпоинты.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { COOKIE_NAME, readCookie, verifySessionToken, getAuthConfig } from './lib/auth.js';
+import { COOKIE_NAME, readCookie, verifySessionToken, getAuthConfig, buildClearCookie } from './lib/auth.js';
+import { getUserRecord } from './lib/users.js';
+
+// Кука самодостаточна: подпись проверяется без обращения к базе, поэтому
+// middleware не добавляет задержки к каждому запросу. Обратная сторона — если
+// удалить пользователя, его текущая сессия доживёт до истечения срока.
+//
+// AUTH_STRICT_SESSION=true меняет размен: каждый запрос сверяется с базой,
+// удаление действует мгновенно, но к любому запросу добавляется поход в Redis.
+const STRICT_SESSION = process.env.AUTH_STRICT_SESSION === 'true';
 
 export const config = {
   matcher: [
@@ -17,6 +26,10 @@ export const config = {
   ]
 };
 
+function url0(request) {
+  return new URL(request.url);
+}
+
 export default async function middleware(request) {
   const { secret, configured, missing } = getAuthConfig();
 
@@ -24,8 +37,8 @@ export default async function middleware(request) {
   // не настроил» — это ровно та ситуация, ради которой всё и затевалось.
   if (!configured) {
     return new Response(
-      `Аутентификация не настроена. Задай переменные окружения: ${missing.join(', ')}\n` +
-      `Сгенерировать значения: node tools/hash-password.mjs\n`,
+      `Аутентификация не настроена.\n\nНе хватает: ${missing.join('; ')}\n\n` +
+      `Завести пользователя: node tools/manage-users.mjs add <логин>\n`,
       { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
     );
   }
@@ -33,21 +46,59 @@ export default async function middleware(request) {
   const token = readCookie(request.headers.get('cookie'), COOKIE_NAME);
   const session = token ? await verifySessionToken(token, secret) : null;
 
-  if (session) return;   // пропускаем дальше
+  let revoked = false;
+  if (session && STRICT_SESSION) {
+    try {
+      const user = await getUserRecord(session.u);
+      revoked = !user || user.disabled === true;
+    } catch {
+      // База недоступна — не выкидываем уже вошедших. Подпись куки валидна,
+      // а падение Redis не должно превращаться в тотальный разлогин.
+      revoked = false;
+    }
+  }
+
+  if (session && !revoked) {
+    // Страница админки. Данные всё равно защищены в /api/admin, но пускать
+    // обычного пользователя на пустую панель — сбивать с толку.
+    if (url0(request).pathname === '/admin.html') {
+      try {
+        const user = await getUserRecord(session.u);
+        if (user?.isAdmin !== true) {
+          return new Response('Доступ только для администраторов.', {
+            status: 403,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+          });
+        }
+      } catch {
+        return new Response('Хранилище пользователей недоступно.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
+      }
+    }
+    return;   // пропускаем дальше
+  }
 
   const url = new URL(request.url);
 
   // API отвечает кодом, а не редиректом: фронтенду нужен разбираемый ответ,
   // а не HTML страницы логина внутри fetch.
+  // Отозванную куку сразу гасим, чтобы браузер не слал её снова и снова.
+  const clearHeaders = revoked ? { 'Set-Cookie': buildClearCookie() } : {};
+
   if (url.pathname.startsWith('/api/')) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      headers: { 'Content-Type': 'application/json; charset=utf-8', ...clearHeaders }
     });
   }
 
   const loginUrl = new URL('/login.html', request.url);
   if (url.pathname !== '/') loginUrl.searchParams.set('next', url.pathname + url.search);
 
-  return Response.redirect(loginUrl, 302);
+  return new Response(null, {
+    status: 302,
+    headers: { Location: loginUrl.toString(), ...clearHeaders }
+  });
 }

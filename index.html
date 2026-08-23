@@ -6,7 +6,7 @@
   <title>Лента независимых СМИ</title>
   <meta name="description" content="Лента независимых русскоязычных СМИ: заголовок, источник, время публикации и ссылка на оригинал." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20260823-2" />
+  <link rel="stylesheet" href="styles.css?v=20260823-4" />
 </head>
 <body>
   <main class="app-shell">
@@ -22,6 +22,8 @@
           <span class="status-label" id="statusLabel">Данные загружаются</span>
           <span class="status-time" id="lastUpdated">—</span>
         </div>
+        <span id="currentUser" class="current-user"></span>
+        <a id="adminLink" class="logout-btn" href="/admin.html" hidden>Пользователи</a>
         <button id="logoutBtn" class="logout-btn" type="button" title="Выйти">Выйти</button>
       </div>
     </header>
@@ -117,6 +119,6 @@
   </template>
 
   <button id="backToTop" class="back-to-top" aria-label="Наверх" hidden>↑</button>
-  <script src="app.js?v=20260823-2"></script>
+  <script src="app.js?v=20260823-4"></script>
 </body>
 </html>

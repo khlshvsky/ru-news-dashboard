@@ -45,6 +45,8 @@ const elements = {
   summaryRefresh: document.querySelector('#summaryRefresh'),
   backToTop: document.querySelector('#backToTop'),
   logoutBtn: document.querySelector('#logoutBtn'),
+  currentUser: document.querySelector('#currentUser'),
+  adminLink: document.querySelector('#adminLink'),
   statusDot: document.querySelector('#statusDot'),
   statusLabel: document.querySelector('#statusLabel'),
   lastUpdated: document.querySelector('#lastUpdated')
@@ -460,6 +462,15 @@ elements.logoutBtn.addEventListener('click', async () => {
     location.href = '/login.html';
   }
 });
+
+// Кто вошёл — показываем в шапке. Не критично, поэтому ошибки глушим.
+fetch('/api/me')
+  .then((res) => (res.ok ? res.json() : null))
+  .then((data) => {
+    if (data?.username) elements.currentUser.textContent = data.username;
+    if (data?.isAdmin) elements.adminLink.hidden = false;
+  })
+  .catch(() => {});
 
 loadNews();
 setInterval(loadNews, AUTO_REFRESH_MS);
