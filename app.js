@@ -39,10 +39,6 @@ const elements = {
   visibleCount: document.querySelector('#visibleCount'),
   emptyState: document.querySelector('#emptyState'),
   newsBadge: document.querySelector('#newsBadge'),
-  aiSummary: document.querySelector('#aiSummary'),
-  summaryText: document.querySelector('#summaryText'),
-  summaryTime: document.querySelector('#summaryTime'),
-  summaryRefresh: document.querySelector('#summaryRefresh'),
   backToTop: document.querySelector('#backToTop'),
   logoutBtn: document.querySelector('#logoutBtn'),
   currentUser: document.querySelector('#currentUser'),
@@ -97,7 +93,7 @@ async function loadNews(options = {}) {
   isLoading = true;
   elements.refreshBtn.disabled = true;
   elements.refreshBtn.textContent = 'Обновляю…';
-  setStatus('loading', 'Обновляю данные');
+  setStatus('loading', 'Обновляю');
 
   try {
     const response = await fetch(buildApiUrl(options), { cache: 'no-store' });
@@ -130,17 +126,17 @@ async function loadNews(options = {}) {
     if (allNews.length === 0) {
       setStatus('ok', 'Свежих новостей нет');
     } else {
-      setStatus('ok', 'Данные из API');
+      setStatus('ok', 'Лента актуальна');
     }
   } catch (error) {
     console.error('News API error:', error);
 
     if (USE_MOCK_DATA) {
       allNews = sortByDateDesc(sanitizeItems(fallbackNews));
-      setStatus('error', 'Моковые данные');
+      setStatus('error', 'Тестовые данные');
     } else {
       allNews = [];
-      setStatus('error', 'Ошибка API');
+      setStatus('error', 'Ошибка загрузки');
       setEmptyState('Не удалось загрузить новости', 'Проверьте /api/health, /api/news и логи Vercel. Тестовые заголовки в проде больше не показываются.');
     }
   } finally {
@@ -149,11 +145,6 @@ async function loadNews(options = {}) {
     isLoading = false;
     elements.refreshBtn.disabled = false;
     elements.refreshBtn.textContent = 'Обновить';
-    // Генерируем сводку только при первой загрузке
-    if (prevNewsUrls.size > 0 && !window._summaryInitialized) {
-      window._summaryInitialized = true;
-      generateSummary();
-    }
   }
 }
 
@@ -163,7 +154,7 @@ function setStatus(type, label) {
   if (type === 'error') elements.statusDot.classList.add('is-error');
 
   elements.statusLabel.textContent = label;
-  elements.lastUpdated.textContent = `Обновлено: ${formatDateTime(new Date().toISOString())}`;
+  elements.lastUpdated.textContent = `обновлено в ${formatClock(new Date())}`;
 }
 
 function setEmptyState(title, text) {
@@ -227,125 +218,6 @@ function getVisibleItems() {
 
 
 
-
-
-// ── AI Summary ───────────────────────────────────────────────────────────────
-
-const SUMMARY_STORAGE_KEY = 'aiSummary_ru_v1';
-const SUMMARY_HOURS = 9; // обновлять в 9:00
-
-function getSummaryFromStorage() {
-  try {
-    const raw = localStorage.getItem(SUMMARY_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch { return null; }
-}
-
-function saveSummaryToStorage(text) {
-  const now = new Date();
-  localStorage.setItem(SUMMARY_STORAGE_KEY, JSON.stringify({
-    text,
-    date: now.toDateString(),
-    time: now.toISOString()
-  }));
-}
-
-function isSummaryFresh(stored) {
-  if (!stored) return false;
-  const now = new Date();
-  const today9 = new Date(now);
-  today9.setHours(SUMMARY_HOURS, 0, 0, 0);
-  // Сводка свежая если: та же дата И сгенерирована после 9:00
-  // ИЛИ сейчас до 9:00 — тогда используем вчерашнюю если она есть
-  const storedDate = new Date(stored.time);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(SUMMARY_HOURS, 0, 0, 0);
-
-  if (now < today9) {
-    // До 9 утра — принимаем вчерашнюю после 9
-    return storedDate >= yesterday;
-  }
-  // После 9 утра — принимаем только сегодняшнюю после 9
-  return storedDate >= today9;
-}
-
-function formatSummaryTime(isoStr) {
-  return new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit', month: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'Europe/Belgrade'  // поменяй, если смотришь ленту из другого пояса
-  }).format(new Date(isoStr));
-}
-
-function showSummary(text, timeStr) {
-  elements.summaryText.textContent = text;
-  elements.summaryTime.textContent = timeStr ? `(${timeStr})` : '';
-  elements.aiSummary.hidden = false;
-}
-
-async function generateSummary(forceRefresh = false) {
-  // Проверяем кэш
-  if (!forceRefresh) {
-    const stored = getSummaryFromStorage();
-    if (isSummaryFresh(stored)) {
-      showSummary(stored.text, formatSummaryTime(stored.time));
-      return;
-    }
-  }
-
-  // Нужна генерация
-  elements.summaryText.textContent = 'Генерирую сводку…';
-  elements.aiSummary.hidden = false;
-  elements.summaryTime.textContent = '';
-
-  // Берём статьи за последние 12 часов
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const recent = allNews.filter(i => i.publishedAt && new Date(i.publishedAt).getTime() > cutoff);
-  const headlines = recent.slice(0, 80).map(i => `- ${i.title} (${i.source})`).join('\n');
-
-  if (!headlines) {
-    elements.summaryText.textContent = 'Недостаточно данных для сводки.';
-    return;
-  }
-
-  const prompt = `Составь сводку главных событий на русском языке — 5-6 предложений. Только факты: кто, что, где. Никаких оценок, эпитетов, вводных слов («таким образом», «следует отметить», «в условиях» и т.п.). Никаких списков — только сплошной текст. Каждое предложение — отдельный факт.
-
-Заголовки:
-${headlines}`;
-
-  try {
-    const res = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 600,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content?.[0]?.text?.trim();
-    if (text) {
-      saveSummaryToStorage(text);
-      showSummary(text, formatSummaryTime(new Date().toISOString()));
-    } else {
-      elements.summaryText.textContent = 'Не удалось сгенерировать сводку.';
-    }
-  } catch (e) {
-    console.warn('Summary error:', e);
-    elements.summaryText.textContent = 'Ошибка при генерации сводки.';
-  }
-}
-
-// Планировщик: проверяем каждую минуту нужно ли обновить
-function scheduleSummary() {
-  setInterval(() => {
-    const stored = getSummaryFromStorage();
-    if (!isSummaryFresh(stored)) generateSummary();
-  }, 60 * 1000);
-}
 
 
 // Дублирует CATEGORIES из lib/sources.js — фронтенд не импортирует серверный
@@ -425,6 +297,16 @@ function formatDateTime(value) {
   }).format(date);
 }
 
+// В шапке нужна только время последнего обновления — полная дата там
+// раздувала карточку на три строки.
+function formatClock(date) {
+  return new Intl.DateTimeFormat('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Belgrade'
+  }).format(date);
+}
+
 function debounce(fn, delay = 180) {
   let timerId;
   return (...args) => {
@@ -457,8 +339,6 @@ elements.logoutBtn.addEventListener('click', async () => {
   try {
     await fetch('/api/logout', { method: 'POST' });
   } finally {
-    // Локальная сводка — это содержимое ленты, за паролем. Чистим при выходе.
-    try { localStorage.removeItem(SUMMARY_STORAGE_KEY); } catch {}
     location.href = '/login.html';
   }
 });
@@ -474,7 +354,3 @@ fetch('/api/me')
 
 loadNews();
 setInterval(loadNews, AUTO_REFRESH_MS);
-
-// AI Summary — запускается после первой загрузки
-scheduleSummary();
-document.querySelector('#summaryRefresh').addEventListener('click', () => generateSummary(true));

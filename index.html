@@ -6,7 +6,7 @@
   <title>Лента независимых СМИ</title>
   <meta name="description" content="Лента независимых русскоязычных СМИ: заголовок, источник, время публикации и ссылка на оригинал." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20260823-4" />
+  <link rel="stylesheet" href="styles.css?v=20260823-5" />
 </head>
 <body>
   <main class="app-shell">
@@ -16,15 +16,19 @@
         <h1>Лента новостей</h1>
         <p class="subtitle">Заголовок → источник → время публикации. Клик по заголовку открывает оригинальную новость.</p>
       </div>
-      <div class="status-card" aria-live="polite">
-        <span class="status-dot" id="statusDot"></span>
-        <div>
-          <span class="status-label" id="statusLabel">Данные загружаются</span>
-          <span class="status-time" id="lastUpdated">—</span>
+      <div class="topbar-side">
+        <div class="status-card" aria-live="polite">
+          <span class="status-dot" id="statusDot"></span>
+          <div class="status-text">
+            <span class="status-label" id="statusLabel">Загружаю</span>
+            <span class="status-time" id="lastUpdated">—</span>
+          </div>
         </div>
-        <span id="currentUser" class="current-user"></span>
-        <a id="adminLink" class="logout-btn" href="/admin.html" hidden>Пользователи</a>
-        <button id="logoutBtn" class="logout-btn" type="button" title="Выйти">Выйти</button>
+        <div class="user-bar">
+          <span id="currentUser" class="current-user"></span>
+          <a id="adminLink" class="ghost-btn" href="/admin.html" hidden>Пользователи</a>
+          <button id="logoutBtn" class="ghost-btn" type="button">Выйти</button>
+        </div>
       </div>
     </header>
 
@@ -85,16 +89,6 @@
       </article>
     </section>
 
-    <section id="aiSummary" class="ai-summary" hidden>
-      <div class="ai-summary-header">
-        <span class="ai-summary-icon">✦</span>
-        <span class="ai-summary-title">Сводка дня</span>
-        <span id="summaryTime" class="ai-summary-time"></span>
-      </div>
-      <div id="summaryText" class="ai-summary-text"></div>
-      <button id="summaryRefresh" class="ai-summary-refresh" title="Обновить сводку">↻</button>
-    </section>
-
     <section class="feed-panel">
       <div class="feed-header">
         <h2>Последние материалы</h2>
@@ -119,6 +113,6 @@
   </template>
 
   <button id="backToTop" class="back-to-top" aria-label="Наверх" hidden>↑</button>
-  <script src="app.js?v=20260823-4"></script>
+  <script src="app.js?v=20260823-5"></script>
 </body>
 </html>

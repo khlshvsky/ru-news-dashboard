@@ -74,17 +74,32 @@ h1 {
   line-height: 1.55;
 }
 
+.topbar-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .status-card {
-  min-width: 245px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 11px;
+  padding: 11px 16px;
   border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.75);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
+  white-space: nowrap;
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.25;
 }
 
 .status-dot {
@@ -105,20 +120,75 @@ h1 {
   box-shadow: 0 0 0 5px rgba(180, 35, 24, 0.12);
 }
 
-.status-label,
-.status-time {
-  display: block;
-}
-
 .status-label {
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .status-time {
-  margin-top: 3px;
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Пользователь и кнопки ──────────────────────────────────────────────── */
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-user {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.current-user:empty { display: none; }
+
+.ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ghost-btn:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.ghost-btn:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 720px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-side {
+    align-items: stretch;
+  }
+
+  .user-bar { justify-content: flex-end; }
 }
 
 .controls,
@@ -485,72 +555,6 @@ button:focus-visible,
 
 
 
-/* ── AI Summary ─────────────────────────────────────────────────────────────── */
-.ai-summary {
-  position: relative;
-  background: var(--color-background-secondary);
-  border: 0.5px solid var(--color-border-secondary);
-  border-radius: 12px;
-  padding: 18px 20px 20px;
-  margin-bottom: 20px;
-}
-
-.ai-summary-header {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 12px;
-}
-
-.ai-summary-icon {
-  color: var(--accent);
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.ai-summary-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: 0.01em;
-}
-
-.ai-summary-time {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  margin-left: 4px;
-}
-
-.ai-summary-text {
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--color-text-primary);
-  padding-right: 52px;
-}
-
-.ai-summary-refresh {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: none;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, transform 0.4s;
-  box-shadow: 0 2px 6px var(--accent-ring);
-}
-
-.ai-summary-refresh:hover {
-  background: var(--accent-dark);
-  transform: rotate(180deg);
-}
 
 /* Кнопка Наверх */
 .back-to-top {
@@ -588,36 +592,4 @@ button:focus-visible,
 
 .current-user:empty { display: none; }
 
-/* ── Кнопка выхода ─────────────────────────────────────────────────────────── */
 
-.logout-btn {
-  margin-left: 8px;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--accent);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.logout-btn:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.logout-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-a.logout-btn {
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-}
