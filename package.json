@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev",
-    "check": "node --check app.js && node --check middleware.js && node --check api/news.js && node --check api/health.js && node --check api/login.js && node --check api/logout.js && node --check api/me.js && node --check api/admin.js && node --check api/setup.js && node --check lib/auth.js && node --check lib/users.js && node --check lib/fetch-news.js && node --check lib/sources.js",
+    "check": "node --check app.js && node --check middleware.js && node --check api/news.js && node --check api/health.js && node --check api/login.js && node --check api/logout.js && node --check api/me.js && node --check api/admin.js && node --check api/setup.js && node --check api/telegram-publish.js && node --check lib/auth.js && node --check lib/users.js && node --check lib/fetch-news.js && node --check lib/sources.js && node --check lib/telegram.js",
     "verify": "node tools/verify-sources.mjs",
     "users": "node tools/manage-users.mjs"
   },

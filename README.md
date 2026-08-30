@@ -25,6 +25,8 @@ api/news.js         сбор новостей + кеш в памяти (5 мин
 api/health.js       health check
 lib/sources.js      37 источников: URL, регулярки, RSS, политики дат
 lib/fetch-news.js   парсер: RSS + HTML, извлечение дат, дедупликация
+lib/telegram.js     публикация новых материалов в Telegram + дедупликация
+api/telegram-publish.js  защищённый endpoint публикации
 tools/verify-sources.mjs   проверка живости источников
 tools/manage-users.mjs     заведение и удаление пользователей
 ```
@@ -144,9 +146,36 @@ Storage → Marketplace → Upstash → Redis, создай базу и прив
 | `RU_DEFAULT_TZ` | MSK | пояс для времени без указания зоны |
 | `USE_FEEDS` | true | использовать RSS там, где он есть |
 | `INCLUDE_UNDATED_ITEMS` | false | пускать материалы без даты |
+| `TELEGRAM_BOT_TOKEN` | — | токен бота от BotFather |
+| `TELEGRAM_CHANNEL_ID` | — | канал в формате `@channel` или числовой ID |
+| `TELEGRAM_PUBLISH_SECRET` | — | секрет вызова `/api/telegram-publish`, минимум 16 символов |
+| `TELEGRAM_SOURCE_IDS` | — | необязательный список sourceId через запятую; пусто = все источники |
+| `TELEGRAM_MAX_PER_RUN` | 5 | максимум сообщений за один запуск, от 1 до 20 |
+| `TELEGRAM_BOOTSTRAP_SEND` | false | отправить текущую ленту при первом запуске; иначе только запомнить её |
 
 Источников 37, а `SOURCE_LIMIT` по умолчанию 25 — подними до 37, если нужен
 полный охват, но следи за таймаутом функции Vercel.
+
+## Telegram-канал
+
+Бот публикует сообщение в формате `Заголовок — Источник`. Название источника
+является ссылкой на оригинальную новость; превью ссылки отключено. Отправленные
+URL хранятся 14 дней в том же Redis, который используется для пользователей.
+
+1. Создай бота через `@BotFather` и добавь его администратором канала с правом
+   публикации сообщений.
+2. Добавь в Vercel переменные `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID` и
+   `TELEGRAM_PUBLISH_SECRET`. Последний должен быть случайной строкой длиной
+   не меньше 16 символов.
+3. В GitHub → Settings → Secrets and variables → Actions добавь:
+   `DASHBOARD_URL` (например, `https://ru-news-dashboard.vercel.app`) и
+   `TELEGRAM_PUBLISH_SECRET` с тем же значением, что в Vercel.
+4. После деплоя открой Actions → Publish Telegram news → Run workflow.
+   Первый запуск по умолчанию только запоминает текущие новости. Все новые
+   материалы после него будут публиковаться раз в пять минут.
+
+Если используется Vercel Pro, GitHub Actions можно заменить встроенным Vercel
+Cron. Endpoint принимает стандартный `CRON_SECRET` тем же Bearer-заголовком.
 
 ## Что отличается от английской версии
 

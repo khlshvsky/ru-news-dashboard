@@ -22,7 +22,7 @@ const STRICT_SESSION = process.env.AUTH_STRICT_SESSION === 'true';
 export const config = {
   matcher: [
     // Всё, кроме внутренних путей Vercel, страницы логина и её ассетов.
-    '/((?!_next|_vercel|favicon\\.ico|login\\.html|setup\\.html|api/login|api/logout|api/setup).*)'
+    '/((?!_next|_vercel|favicon\\.ico|login\\.html|setup\\.html|api/login|api/logout|api/setup|api/telegram-publish).*)'
   ]
 };
 
