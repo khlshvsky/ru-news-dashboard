@@ -1,0 +1,21 @@
+name: Publish Telegram news
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger publisher
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+          PUBLISH_SECRET: ${{ secrets.TELEGRAM_PUBLISH_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 2 \
+            --max-time 90 \
+            -H "Authorization: Bearer ${PUBLISH_SECRET}" \
+            "${DASHBOARD_URL%/}/api/telegram-publish"
